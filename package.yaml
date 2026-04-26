@@ -1,0 +1,12 @@
+name: "gridmap_server"
+version: "0.1.0"
+description: "Grid Map Server for publishing static occupancy grid maps from YAML configuration."
+maintainers:
+  - name: "fins"
+    email: "fins@sjtu.edu.cn"
+depends:
+  nav_msgs: "system"
+  OpenCV: "system"
+  yaml-cpp: "0.7.0"
+licenses:
+  - "MIT"
