@@ -7,8 +7,6 @@
 #pragma once
 
 #include <fins/node.hpp>
-#include <fins/agent/parameter_server.hpp>
-#include <fins/utils/time.hpp>
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <yaml-cpp/yaml.h>
