@@ -12,15 +12,13 @@
 #include <yaml-cpp/yaml.h>
 #include <opencv2/opencv.hpp>
 #include <filesystem>
-#include <thread>
-#include <atomic>
 
 class GridMapServer : public fins::Node {
 public:
     void define() override {
         set_name("GridMapServer");
         set_description("Static Grid Map Server");
-        set_category("Mapping");
+        set_category("Navigation");
 
         register_output<nav_msgs::msg::OccupancyGrid>("global_grid_map");
 
@@ -37,21 +35,13 @@ public:
         } else {
             logger->warn("No map path provided during initialization.");
         }
-        
-        publish_thread_ = std::thread(&GridMapServer::publish_loop, this);
-        publish_thread_.detach();
     }
 
     void run() override {
-        running_ = true;
-    }
-
-    void pause() override {
-        running_ = false;
-    }
-    void reset() override {
-        map_loaded_ = false;
-        logger->info("GridMapServer reset.");
+        if (map_loaded_) {
+            logger->info("Publishing map once on run.");
+            send("global_grid_map", cached_map_msg_, fins::now());
+        }
     }
 
 private:
@@ -61,6 +51,7 @@ private:
         if (load_map_from_yaml(new_path)) {
             map_path_ = new_path;
             map_loaded_ = true;
+            send("global_grid_map", cached_map_msg_, fins::now());
         }
     }
 
@@ -124,25 +115,9 @@ private:
         }
     }
 
-    void publish_map() {
-        send("global_grid_map", cached_map_msg_, fins::now());
-        logger->info("Published global grid map. Size: {}x{}", cached_map_msg_.info.width, cached_map_msg_.info.height);
-    }
-
-    void publish_loop() {
-        while (true) {
-            if (running_ && map_loaded_) {
-                publish_map();
-            }
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-    }
-
     std::string map_path_;
     bool map_loaded_ = false;
     nav_msgs::msg::OccupancyGrid cached_map_msg_;
-    std::thread publish_thread_;
-    std::atomic<bool> running_{false};
 };
 
 EXPORT_NODE(GridMapServer)
